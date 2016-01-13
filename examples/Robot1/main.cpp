@@ -51,12 +51,17 @@ void reshape(int w,int h){ mp.reshape(w,h); }
 
 int drawplot(int argc,char* argv[])
 {
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
     glutInit(&argc, argv);
     glutCreateWindow(40,40,1600,800);
     glutDisplayFunc( display );
     glutReshapeFunc( reshape );
     glutMainLoop();
     return 0;
+
+#pragma clang diagnostic pop
 }
 
 using namespace KalmanExamples;
