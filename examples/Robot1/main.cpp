@@ -9,6 +9,43 @@
 #include <random>
 #include <chrono>
 
+#include "matplotpp.h"
+
+class MyPlot :public MatPlot
+{
+public:
+    
+    std::vector<std::pair<double, double>> plot1_;
+    
+    std::vector<std::pair<double, double>> plot2_;
+    
+    std::vector<std::pair<double, double>> plot3_;
+    
+    std::vector<std::pair<double, double>> plot4_;
+    
+    void DISPLAY()
+    {
+        plot(plot1_);
+        plot(plot2_);
+        plot(plot3_);
+        plot(plot4_);
+    }
+    
+}mp;
+
+void display(){ mp.display(); }
+void reshape(int w,int h){ mp.reshape(w,h); }
+
+int drawplot(int argc,char* argv[])
+{
+    glutInit(&argc, argv);
+    glutCreateWindow(40,40,800,800);
+    glutDisplayFunc( display );
+    glutReshapeFunc( reshape );
+    glutMainLoop();
+    return 0;
+}
+
 using namespace KalmanExamples;
 
 typedef float T;
@@ -116,6 +153,11 @@ int main(int argc, char** argv)
             x_ukf = ukf.update(pm, position);
         }
         
+        mp.plot1_.emplace_back(std::make_pair(x.x(), x.y()));
+        mp.plot2_.emplace_back(std::make_pair(x_pred.x(), x_pred.y()));
+        mp.plot3_.emplace_back(std::make_pair(x_ekf.x(), x_ekf.y()));
+        mp.plot4_.emplace_back(std::make_pair(x_ukf.x(), x_ukf.y()));
+        
         // Print to stdout as csv format
         std::cout   << x.x() << "," << x.y() << "," << x.theta() << ","
                     << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta()  << ","
@@ -123,6 +165,8 @@ int main(int argc, char** argv)
                     << x_ukf.x() << "," << x_ukf.y() << "," << x_ukf.theta()
                     << std::endl;
     }
+    
+    drawplot(argc, argv);
     
     return 0;
 }
