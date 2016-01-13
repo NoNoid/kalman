@@ -15,20 +15,33 @@ class MyPlot :public MatPlot
 {
 public:
     
-    std::vector<std::pair<double, double>> plot1_;
+    std::vector<std::pair<double, double>> plotActual_;
+    std::vector<std::pair<double, double>> plotPredicted_;
+    std::vector<std::pair<double, double>> plotEKF_;
+    std::vector<std::pair<double, double>> plotUKF_;
     
-    std::vector<std::pair<double, double>> plot2_;
-    
-    std::vector<std::pair<double, double>> plot3_;
-    
-    std::vector<std::pair<double, double>> plot4_;
+    std::vector<std::pair<double, double>> plotErrorEKF_;
+    std::vector<std::pair<double, double>> plotErrorUKF_;
     
     void DISPLAY()
     {
-        plot(plot1_);
-        plot(plot2_);
-        plot(plot3_);
-        plot(plot4_);
+        subplot(1,2,1);
+        
+        xlabel("x");
+        ylabel("y");
+        
+        plot(plotActual_);set("db");
+        plot(plotPredicted_);set("dr");
+        plot(plotEKF_);set("dy");
+        plot(plotUKF_);set("dc");
+        
+        subplot(1,2,2);
+        
+        xlabel("Error");
+        ylabel("Iteration");
+        
+        plot(plotErrorEKF_);set("b");
+        plot(plotErrorUKF_);set("dy");
     }
     
 }mp;
@@ -39,7 +52,7 @@ void reshape(int w,int h){ mp.reshape(w,h); }
 int drawplot(int argc,char* argv[])
 {
     glutInit(&argc, argv);
-    glutCreateWindow(40,40,800,800);
+    glutCreateWindow(40,40,1600,800);
     glutDisplayFunc( display );
     glutReshapeFunc( reshape );
     glutMainLoop();
@@ -78,7 +91,7 @@ int main(int argc, char** argv)
     
     // Random number generation (for noise simulation)
     std::default_random_engine generator;
-    generator.seed( std::chrono::system_clock::now().time_since_epoch().count() );
+    generator.seed(static_cast<unsigned int>(std::chrono::system_clock::now().time_since_epoch().count()));
     std::normal_distribution<T> noise(0, 1);
     
     // Some filters for estimation
@@ -153,17 +166,17 @@ int main(int argc, char** argv)
             x_ukf = ukf.update(pm, position);
         }
         
-        mp.plot1_.emplace_back(std::make_pair(x.x(), x.y()));
-        mp.plot2_.emplace_back(std::make_pair(x_pred.x(), x_pred.y()));
-        mp.plot3_.emplace_back(std::make_pair(x_ekf.x(), x_ekf.y()));
-        mp.plot4_.emplace_back(std::make_pair(x_ukf.x(), x_ukf.y()));
+        mp.plotActual_.emplace_back(std::make_pair(x.x(), x.y()));
+        mp.plotPredicted_.emplace_back(std::make_pair(x_pred.x(), x_pred.y()));
+        mp.plotEKF_.emplace_back(std::make_pair(x_ekf.x(), x_ekf.y()));
+        mp.plotUKF_.emplace_back(std::make_pair(x_ukf.x(), x_ukf.y()));
         
-        // Print to stdout as csv format
-        std::cout   << x.x() << "," << x.y() << "," << x.theta() << ","
-                    << x_pred.x() << "," << x_pred.y() << "," << x_pred.theta()  << ","
-                    << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.theta()  << ","
-                    << x_ukf.x() << "," << x_ukf.y() << "," << x_ukf.theta()
-                    << std::endl;
+        double ekfError = sqrt( pow((x.x() - x_ekf.x()),2) + pow((x.y() - x_ekf.y()),2));
+        mp.plotErrorEKF_.emplace_back(std::make_pair(i, ekfError));
+        
+        double ukfError = sqrt( pow((x.x() - x_ukf.x()),2) + pow((x.y() - x_ukf.y()),2));
+        mp.plotErrorUKF_.emplace_back(std::make_pair(i, ukfError));
+        
     }
     
     drawplot(argc, argv);
