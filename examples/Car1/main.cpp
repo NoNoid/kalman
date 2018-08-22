@@ -6,96 +6,19 @@
 //  Copyright © 2016 Sumeru Chatterjee. All rights reserved.
 //
 
+// this MUST be first, otherwise there might be problems on windows
+// see: https://stackoverflow.com/questions/6563810/m-pi-works-with-math-h-but-not-with-cmath-in-visual-studio/6563891#6563891
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <stdio.h>
-
-#include "matplotpp.h"
-
-#include "csv.h"
-
-class MyPlot :public MatPlot
-{
-public:
-    
-    std::vector<std::pair<double, double>> plotAx_;
-    std::vector<std::pair<double, double>> plotAy_;
-    std::vector<std::pair<double, double>> plotAz_;
-    
-    std::vector<std::pair<double, double>> plotRoll_;
-    std::vector<std::pair<double, double>> plotPitch_;
-    std::vector<std::pair<double, double>> plotYaw_;
-    
-    std::vector<std::pair<double, double>> plotRollRate_;
-    std::vector<std::pair<double, double>> plotPitchRate_;
-    std::vector<std::pair<double, double>> plotYawRate_;
-    
-    std::vector<std::pair<double, double>> plotPosition_;
-    std::vector<std::pair<double, double>> plotEKFPosition_;
-    std::vector<std::pair<double, double>> plotUKFPosition_;
-    
-    std::vector<std::pair<double, double>> plotCoordinates_;
-    std::vector<std::pair<double, double>> plotEKFCoordinates_;
-    std::vector<std::pair<double, double>> plotUKFCoordinates_;
-    
-    void DISPLAY()
-    {
-        subplot(2,2,1);
-        
-        xlabel("time (millis)");
-        ylabel("acceleration");
-        
-        plot(plotAx_);set("dr");
-        plot(plotAy_);set("db");
-        plot(plotAz_);set("dg");
-        
-        subplot(2,2,2);
-        
-        plot(plotCoordinates_);set("b");
-        
-        subplot(2,2,3);
-        
-        xlabel("time (millis)");
-        ylabel("angles/sec");
-        
-        plot(plotRollRate_);set("dr");
-        plot(plotPitchRate_);set("db");
-        plot(plotYawRate_);set("dg");
-        
-        subplot(2,2,4);
-        
-        xlabel("time (millis)");
-        ylabel("angle");
-        
-        plot(plotRoll_);set("dr");
-        plot(plotPitch_);set("db");
-        plot(plotYaw_);set("dg");
-    }
-    
-}mp;
-
-void display(){ mp.display(); }
-void reshape(int w,int h){ mp.reshape(w,h); }
-
-int drawplot(int argc,char* argv[])
-{
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    
-    glutInit(&argc, argv);
-    glutCreateWindow(40,40,1600,1000);
-    glutDisplayFunc( display );
-    glutReshapeFunc( reshape );
-    glutMainLoop();
-    return 0;
-    
-#pragma clang diagnostic pop
-}
-
+#include <iostream>
 #include <kalman/ExtendedKalmanFilter.hpp>
 #include <kalman/UnscentedKalmanFilter.hpp>
 
 #include "Car1SystemModel.hpp"
-
 #include "Car1MeasurementModel.hpp"
+
+#include "../fast-cpp-csv-parser/csv.h"
 
 using namespace KalmanExamples;
 
@@ -164,30 +87,33 @@ int main(int argc, char** argv)
             x_ukf = ukf.update(cm, measurement);
         }
         
-        mp.plotAx_.emplace_back(std::make_pair( time, ax));
-        mp.plotAy_.emplace_back(std::make_pair( time, ay));
-        mp.plotAz_.emplace_back(std::make_pair( time, az));
-        
-        mp.plotRoll_.emplace_back(std::make_pair(time, roll));
-        mp.plotPitch_.emplace_back(std::make_pair(time, pitch));
-        mp.plotYaw_.emplace_back(std::make_pair(time, yaw));
-        
-        mp.plotRollRate_.emplace_back(std::make_pair(time, rollrate));
-        mp.plotPitchRate_.emplace_back(std::make_pair(time, pitchrate));
-        mp.plotYawRate_.emplace_back(std::make_pair(time, yawrate));
-        
-        mp.plotCoordinates_.emplace_back(std::make_pair(latitude, longitude));
+        //mp.plotAx_.emplace_back(std::make_pair( time, ax));
+        //mp.plotAy_.emplace_back(std::make_pair( time, ay));
+        //mp.plotAz_.emplace_back(std::make_pair( time, az));
+        //
+        //mp.plotRoll_.emplace_back(std::make_pair(time, roll));
+        //mp.plotPitch_.emplace_back(std::make_pair(time, pitch));
+        //mp.plotYaw_.emplace_back(std::make_pair(time, yaw));
+        //
+        //mp.plotRollRate_.emplace_back(std::make_pair(time, rollrate));
+        //mp.plotPitchRate_.emplace_back(std::make_pair(time, pitchrate));
+        //mp.plotYawRate_.emplace_back(std::make_pair(time, yawrate));
+        //
+        //mp.plotCoordinates_.emplace_back(std::make_pair(latitude, longitude));
 
-        mp.plotPosition_.emplace_back(std::make_pair(x.x(), x.y()));
-        mp.plotEKFPosition_.emplace_back(std::make_pair(x_ekf.x(), x_ekf.y()));
-        mp.plotUKFPosition_.emplace_back(std::make_pair(x_ukf.x(), x_ukf.y()));
+        //mp.plotPosition_.emplace_back(std::make_pair(x.x(), x.y()));
+        //mp.plotEKFPosition_.emplace_back(std::make_pair(x_ekf.x(), x_ekf.y()));
+        //mp.plotUKFPosition_.emplace_back(std::make_pair(x_ukf.x(), x_ukf.y()));
+
+        std::cout << x.x() << "," << x.y() << "," << x.heading() << "," << x.velocity() << "," << x.yawrate()
+            << x_ekf.x() << "," << x_ekf.y() << "," << x_ekf.heading() << "," << x_ekf.velocity() << "," << x_ekf.yawrate()
+            << x_ukf.x() << "," << x_ukf.y() << "," << x_ukf.heading() << "," << x_ukf.velocity() << "," << x_ukf.yawrate()
+            << std::endl;
         
         counter ++;
     }
     
     std::cout << "Total: " << counter << std::endl;
-    
-    drawplot(argc, argv);
     
     return 0;
 }

@@ -58,10 +58,10 @@ class CarMeasurementModel : public Kalman::LinearizedMeasurementModel<State<T>, 
 {
 public:
 	//! State type shortcut definition
-	typedef State<T> S;
+	typedef KalmanExamples::Car1::State<T> S;
 
 	//! Measurement type shortcut definition
-	typedef CarMeasurement<T> M;
+	typedef KalmanExamples::Car1::CarMeasurement<T> M;
 
 	/**
      * @brief Constructor
